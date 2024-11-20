@@ -1,23 +1,28 @@
 import customtkinter as ctk
-from config.settings import HONEY_BG_COLOR, TITLE_COLOR
-from .email_checker import EmailChecker
+from config.settings import BACKGROUND_COLOR
+from .navbar import Navbar
+from .sidebar import Sidebar
 from .password_checker import PasswordChecker
 
 class HoneyGuard:
     def __init__(self):
-        ctk.set_appearance_mode("light")  
-
-        self.root = ctk.CTk()  # Use CustomTkinter's CTk for modern look
+        ctk.set_appearance_mode("light")
+        self.root = ctk.CTk()
         self.root.title("HoneyGuard")
-        self.root.geometry("500x400")
-        self.root.configure(bg=HONEY_BG_COLOR)  
+        self.root.geometry("800x600")
+        self.root.configure(bg=BACKGROUND_COLOR)
 
-        title_label = ctk.CTkLabel(self.root, text="🐝 HoneyGuard 🐝", font=("Helvetica", 24, "bold"), text_color=TITLE_COLOR)
-        title_label.pack(pady=20)
+        # Add Navbar
+        self.navbar = Navbar(self.root)
 
-        # Create and pack the Email and Password Checker frames
-        self.email_checker = EmailChecker(self.root)
-        self.password_checker = PasswordChecker(self.root)
+        # Add Sidebar
+        self.sidebar = Sidebar(self.root)
+
+        # Main Content Frame
+        self.content_frame = ctk.CTkFrame(self.root, fg_color=BACKGROUND_COLOR)
+        self.content_frame.pack(fill="both", expand=True, side="right")
+
+        self.password_checker = PasswordChecker(self.content_frame)
 
     def run(self):
         self.root.mainloop()

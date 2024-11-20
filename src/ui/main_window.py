@@ -9,7 +9,7 @@ class HoneyGuard:
         ctk.set_appearance_mode("light")
         self.root = ctk.CTk()
         self.root.title("HoneyGuard")
-        self.root.geometry("800x600")
+        self.root.geometry("960x540")
         self.root.configure(bg=BACKGROUND_COLOR)
 
         # Add Navbar

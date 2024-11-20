@@ -142,3 +142,19 @@ class PasswordChecker(ctk.CTkFrame):
         )
         self.console_textbox.pack(fill="both", expand=True, padx=10, pady=(0, 10))  # Reduced padding
 
+    def process_password(self):
+        password = self.password_entry.get()
+        selected_tests = []
+        if self.brute_force_var.get() == "on":
+            selected_tests.append("Brute Force")
+        if self.dictionary_var.get() == "on":
+            selected_tests.append("Dictionary")
+        hacker_skill = self.skill_level_var.get()
+
+        # Simulate processing and update console
+        self.console_textbox.configure(state="normal")
+        self.console_textbox.insert("end", f"Checking password: {password}\n")
+        self.console_textbox.insert("end", f"Selected tests: {', '.join(selected_tests)}\n")
+        self.console_textbox.insert("end", f"Hacker skill level: {hacker_skill}\n")
+        self.console_textbox.insert("end", "Processing...\n")
+        self.console_textbox.configure(state="disabled")

@@ -7,7 +7,7 @@ from .password_checker import PasswordChecker
 class HoneyGuard:
     def __init__(self):
         ctk.set_appearance_mode("light")
-        self.root = ctk.CTk()
+        self.root = ctk.CTk()  # Initialize CTk window
         self.root.title("HoneyGuard")
         self.root.geometry("960x540")
         self.root.configure(bg=BACKGROUND_COLOR)
@@ -15,14 +15,13 @@ class HoneyGuard:
         # Add Navbar
         self.navbar = Navbar(self.root)
 
-        # Add Sidebar
-        self.sidebar = Sidebar(self.root)
+        # Create the sidebar
+        self.sidebar = Sidebar(self.root)  # Pass self.root as parent
+        self.sidebar.pack(side="left", fill="y")
 
-        # Main Content Frame
-        self.content_frame = ctk.CTkFrame(self.root, fg_color=BACKGROUND_COLOR)
-        self.content_frame.pack(fill="both", expand=True, side="right")
-
-        self.password_checker = PasswordChecker(self.content_frame)
+        # Create the PasswordChecker and pass the sidebar instance
+        self.password_checker = PasswordChecker(self.root, self.sidebar)  # Pass self.root as parent
+        self.password_checker.pack(fill="both", expand=True)
 
     def run(self):
         self.root.mainloop()

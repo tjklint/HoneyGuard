@@ -121,32 +121,38 @@ class PasswordChecker(ctk.CTkFrame):
         )
         self.console_textbox.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
-        # Password Score Section
-        bottom_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=0)
-        bottom_frame.pack(fill="x", pady=(20, 0), padx=20)
+                # Password Score and Advice Section
+        score_advice_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=0)
+        score_advice_frame.pack(fill="both", expand=True, padx=20, pady=(10, 20))
 
+        # Password Score Section
         self.hivegrade_canvas = Canvas(
-            bottom_frame,
-            width=120,
-            height=120,
+            score_advice_frame,
+            width=150,  # Increased size for better visibility
+            height=150,
             bg="#FFFFFF",
             highlightthickness=0
         )
-        self.hivegrade_canvas.pack(side="left", anchor="w", padx=10)
-        self.hivegrade_circle = self.hivegrade_canvas.create_oval(10, 10, 110, 110, outline="#CCCCCC", width=15)
-        self.hivegrade_text = self.hivegrade_canvas.create_text(60, 60, text="N/A", font=("Arial", 16, "bold"), fill="#5C4033")
+        self.hivegrade_canvas.pack(side="left", anchor="n", padx=20, pady=(0, 10))
+
+        self.hivegrade_circle = self.hivegrade_canvas.create_oval(
+            10, 10, 140, 140, outline="#CCCCCC", width=15
+        )
+        self.hivegrade_text = self.hivegrade_canvas.create_text(
+            75, 75, text="N/A", font=("Arial", 20, "bold"), fill="#5C4033"
+        )
 
         # Advice Section
-        advice_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=0)
-        advice_frame.pack(fill="both", expand=True, padx=20, pady=10)
+        advice_frame = ctk.CTkFrame(score_advice_frame, fg_color="#FFFFFF", corner_radius=0)
+        advice_frame.pack(side="left", fill="both", expand=True, padx=20, pady=(0, 10))
 
         advice_label = ctk.CTkLabel(
             advice_frame,
             text="Password Advice:",
-            font=("Arial", 14, "bold"),
+            font=("Arial", 16, "bold"),
             text_color="#5C4033"
         )
-        advice_label.pack(anchor="nw", pady=(0, 5))
+        advice_label.pack(anchor="nw", pady=(0, 10))
 
         self.advice_dynamic_label = ctk.CTkLabel(
             advice_frame,
@@ -156,6 +162,7 @@ class PasswordChecker(ctk.CTkFrame):
             justify="left"
         )
         self.advice_dynamic_label.pack(anchor="nw")
+        
 
     def process_password(self):
         password = self.password_entry.get()

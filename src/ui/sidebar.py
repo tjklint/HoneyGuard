@@ -1,12 +1,18 @@
+import json  # For saving and loading HiveGrade
 import customtkinter as ctk
 from PIL import Image, ImageTk, ImageEnhance
 from tkinter import Canvas
 from config.settings import HIVEGRADE_BG_COLOR, HIVEGRADE_FILL_COLOR, TEXT_COLOR
 
+
 class Sidebar(ctk.CTkFrame):
+    HIVEGRADE_FILE = "hivegrade.json"  # File to store the HiveGrade
+
     def __init__(self, parent):
-        super().__init__(parent, fg_color="#F0F0F0", corner_radius=0)  
+        super().__init__(parent, fg_color="#F0F0F0", corner_radius=0)
         self.pack(side="left", fill="y")
+        # Load HiveGrade from file
+        self.hivegrade_percentage = self.load_hivegrade()
 
         # Navigation Buttons
         self.create_nav_button("Home", "assets/icons/Home.png")
@@ -22,9 +28,9 @@ class Sidebar(ctk.CTkFrame):
         self.hivegrade_canvas = Canvas(self, width=120, height=120, bg="#F0F0F0", highlightthickness=0)
         self.hivegrade_canvas.pack()
 
-        # Initial HiveGrade settings
-        self.hivegrade_percentage = 0
-        self.hivegrade_text = self.hivegrade_canvas.create_text(60, 60, text="N/A", font=("Arial", 18, "bold"), fill=TEXT_COLOR)
+        self.hivegrade_text = self.hivegrade_canvas.create_text(
+            60, 60, text=f"{self.hivegrade_percentage}%", font=("Arial", 18, "bold"), fill=TEXT_COLOR
+        )
         self.draw_hivegrade_circle()
 
     def create_nav_button(self, text, icon_path):
@@ -42,7 +48,6 @@ class Sidebar(ctk.CTkFrame):
     def recolor_image(self, image, color):
         # Convert the image to grayscale
         grayscale_image = image.convert("L")
-        # Convert grayscale image to RGB and apply color
         colored_image = ImageEnhance.Color(grayscale_image).enhance(0).convert("RGBA")
         for x in range(colored_image.width):
             for y in range(colored_image.height):
@@ -56,12 +61,33 @@ class Sidebar(ctk.CTkFrame):
         self.hivegrade_canvas.create_oval(10, 10, 110, 110, outline=HIVEGRADE_BG_COLOR, width=15)
         # Draw the progress/fill circle based on the current percentage
         if self.hivegrade_percentage > 0:
-            self.hivegrade_canvas.create_arc(10, 10, 110, 110, start=90, extent=-3.6 * self.hivegrade_percentage,
-                                             outline=HIVEGRADE_FILL_COLOR, style="arc", width=15)
+            self.hivegrade_canvas.create_arc(
+                10, 10, 110, 110, start=90, extent=-3.6 * self.hivegrade_percentage,
+                outline=HIVEGRADE_FILL_COLOR, style="arc", width=15
+            )
 
-    def update_hivegrade(self, percentage):
-        # Update the HiveGrade percentage and redraw
-        self.hivegrade_percentage = percentage
-        self.hivegrade_canvas.delete("all")  
+    def update_hivegrade(self, entropy_score, dictionary_score, api_score):
+        # Combine the scores into a final HiveGrade
+        self.hivegrade_percentage = int(
+            0.6 * entropy_score + 0.2 * dictionary_score + 0.2 * api_score
+        )
+        self.save_hivegrade(self.hivegrade_percentage)  # Save to file
+
+        # Update the HiveGrade display
+        self.hivegrade_canvas.delete("all")
         self.draw_hivegrade_circle()
         self.hivegrade_canvas.itemconfig(self.hivegrade_text, text=f"{self.hivegrade_percentage}%")
+
+    def save_hivegrade(self, percentage):
+        # Save HiveGrade to a JSON file
+        with open(self.HIVEGRADE_FILE, "w") as file:
+            json.dump({"hivegrade": percentage}, file)
+
+    def load_hivegrade(self):
+        # Load HiveGrade from a JSON file, or return 0 if the file doesn't exist
+        try:
+            with open(self.HIVEGRADE_FILE, "r") as file:
+                data = json.load(file)
+                return data.get("hivegrade", 0)
+        except FileNotFoundError:
+            return 0

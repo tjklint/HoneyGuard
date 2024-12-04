@@ -1,6 +1,15 @@
 from config.settings import CHARACTER_SETS, HACKER_SPEEDS
 
-def estimate_crack_time(password: str, hacker_skill: str) -> str:
+
+def estimate_crack_time(password: str, hacker_skill: str) -> dict:
+    """
+    Estimate the time required to crack a password using brute force
+    based on the hacker's skill level and password complexity.
+    
+    :param password: The password to analyze
+    :param hacker_skill: Hacker skill level (e.g., "amateur", "organization")
+    :return: Dictionary containing the estimated time in readable format
+    """
     # Determine password complexity level based on characters used
     if all(c in CHARACTER_SETS["simple"] for c in password):
         complexity_level = "simple"
@@ -29,5 +38,11 @@ def estimate_crack_time(password: str, hacker_skill: str) -> str:
     minutes = time_to_crack_seconds // 60
     seconds = time_to_crack_seconds % 60
     
-    return (f"Estimated time to crack password '{password}' for a {hacker_skill} hacker:\n"
-            f"{int(days)} days, {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds")
+    return {
+        "password": password,
+        "complexity_level": complexity_level,
+        "days": int(days),
+        "hours": int(hours),
+        "minutes": int(minutes),
+        "seconds": int(seconds),
+    }

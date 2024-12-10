@@ -1,7 +1,7 @@
 import json  # For saving and loading HiveGrade
 import customtkinter as ctk
 from PIL import Image, ImageTk, ImageEnhance
-from tkinter import Canvas
+from tkinter import Canvas, Frame
 from config.settings import HIVEGRADE_BG_COLOR, HIVEGRADE_FILL_COLOR, TEXT_COLOR
 
 
@@ -11,16 +11,20 @@ class Sidebar(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent, fg_color="#F0F0F0", corner_radius=0)
         self.pack(side="left", fill="y")
+        # Add the black bar to the right side
+        self.right_black_bar = Frame(self, width=5, bg="black")
+        self.right_black_bar.pack(side="right", fill="y")
+
         # Load HiveGrade from file
         self.hivegrade_percentage = self.load_hivegrade()
 
         # Navigation Buttons
         self.create_nav_button("Home", "assets/icons/Home.png")
         self.create_nav_button("HoneyCrack", "assets/icons/HoneyCrack.png")
-        self.create_nav_button("HiveBreach", "assets/icons/HiveBreach.png")
+        # self.create_nav_button("HiveBreach", "assets/icons/HiveBreach.png")
 
         # Spacer
-        ctk.CTkLabel(self, text="")  
+        ctk.CTkLabel(self, text="")
 
         # HiveGrade Circle
         self.hivegrade_label = ctk.CTkLabel(self, text="HiveGrade:", font=("Arial", 16, "bold"), text_color=TEXT_COLOR)
@@ -36,7 +40,7 @@ class Sidebar(ctk.CTkFrame):
     def create_nav_button(self, text, icon_path):
         # Load and recolor PNG image to yellow
         icon_image = Image.open(icon_path).resize((30, 30))
-        icon_image = self.recolor_image(icon_image, "#E6920A") 
+        icon_image = self.recolor_image(icon_image, "#E6920A")
         icon_image_tk = ImageTk.PhotoImage(icon_image)
 
         # Create button with icon
@@ -69,14 +73,18 @@ class Sidebar(ctk.CTkFrame):
     def update_hivegrade(self, entropy_score, dictionary_score, api_score):
         # Combine the scores into a final HiveGrade
         self.hivegrade_percentage = int(
-            0.6 * entropy_score + 0.2 * dictionary_score + 0.2 * api_score
+            0.65 * entropy_score + 0.35 * dictionary_score
         )
-        self.save_hivegrade(self.hivegrade_percentage)  # Save to file
+        self.save_hivegrade(self.hivegrade_percentage)
 
         # Update the HiveGrade display
         self.hivegrade_canvas.delete("all")
         self.draw_hivegrade_circle()
-        self.hivegrade_canvas.itemconfig(self.hivegrade_text, text=f"{self.hivegrade_percentage}%")
+
+        # Recreate the text element with the updated HiveGrade percentage
+        self.hivegrade_text = self.hivegrade_canvas.create_text(
+            60, 60, text=f"{self.hivegrade_percentage}%", font=("Arial", 18, "bold"), fill=TEXT_COLOR
+        )
 
     def save_hivegrade(self, percentage):
         # Save HiveGrade to a JSON file

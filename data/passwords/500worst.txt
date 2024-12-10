@@ -1,5 +1,8 @@
 123456
 password
+Password
+password123
+Password123
 12345678
 1234
 pussy

@@ -27,9 +27,9 @@ CHARACTER_SETS = {
 }
 
 HACKER_SPEEDS = {
-    "amateur": 1_000,            # 1,000 guesses per second
-    "intermediate": 100_000,      # 100,000 guesses per second
-    "organization": 10_000_000    # 10 million guesses per second
+    "amateur": 10_000,            # 1,000 guesses per second
+    "professional": 1_000_000,      # 100,000 guesses per second
+    "organization": 100_000_000    # 10 million guesses per second
 }
 
 # Legacy Styling Constants (keeping these here during development for reference)

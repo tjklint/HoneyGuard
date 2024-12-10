@@ -2,15 +2,14 @@ import customtkinter as ctk
 from tkinter import Canvas
 from config.settings import CHARACTER_SETS, HACKER_SPEEDS
 from src.services.brute_force_service import estimate_crack_time
-from src.services.dictionary_attack_service import check_dictionary
+from src.services.dictionary_attack_service import check_dictionary, remove_common_patterns, is_fuzzy_match
 
 class PasswordChecker(ctk.CTkFrame):
     def __init__(self, parent, sidebar):
         super().__init__(parent, fg_color="#FFFFFF", corner_radius=0)
-        self.sidebar = sidebar  # Store the reference to the Sidebar
+        self.sidebar = sidebar
         self.pack(fill="both", expand=True)
 
-        # Title
         title_label = ctk.CTkLabel(
             self,
             text="Let the Hive check your password:",
@@ -19,7 +18,6 @@ class PasswordChecker(ctk.CTkFrame):
         )
         title_label.pack(pady=(5, 10))
 
-        # Password Entry Section
         entry_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=0)
         entry_frame.pack(pady=(5, 10))
 
@@ -48,22 +46,19 @@ class PasswordChecker(ctk.CTkFrame):
         )
         enter_button.pack(side="left", padx=(5, 0))
 
-        # Options and Console Section
         options_console_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=0)
         options_console_frame.pack(fill="both", expand=True, padx=20, pady=10)
 
-        # Options Panel
         options_frame = ctk.CTkFrame(
             options_console_frame,
             fg_color="#F3AF32",
             corner_radius=10,
             width=350,
-            height=200  # Increased height to accommodate dropdown
+            height=200
         )
         options_frame.pack_propagate(False)
         options_frame.pack(side="left", anchor="n", padx=(0, 10), pady=10)
 
-        # Hacker Level Dropdown
         hacker_label = ctk.CTkLabel(
             options_frame,
             text="Hacker Skill Level:",
@@ -84,7 +79,6 @@ class PasswordChecker(ctk.CTkFrame):
         )
         hacker_dropdown.pack(anchor="w", padx=10, pady=(0, 10))
 
-        # Checkboxes
         self.entropy_var = ctk.StringVar(value="on")
         entropy_checkbox = ctk.CTkCheckBox(
             options_frame,
@@ -127,13 +121,12 @@ class PasswordChecker(ctk.CTkFrame):
         )
         dictionary_attack_checkbox.pack(anchor="w", padx=10, pady=(5, 0))
 
-        # Console Output Section
         console_frame = ctk.CTkFrame(
             options_console_frame,
             fg_color="#E0E0E0",
             corner_radius=10,
             width=350,
-            height=150
+            height=200
         )
         console_frame.pack_propagate(False)
         console_frame.pack(side="left", anchor="n", padx=(10, 0), pady=10)
@@ -156,11 +149,9 @@ class PasswordChecker(ctk.CTkFrame):
         )
         self.console_textbox.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
-        # Password Score and Advice Section
         score_advice_frame = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=0)
         score_advice_frame.pack(fill="both", expand=True, padx=20, pady=(10, 20))
 
-        # Password Score Section
         self.hivegrade_canvas = Canvas(
             score_advice_frame,
             width=150,
@@ -177,7 +168,6 @@ class PasswordChecker(ctk.CTkFrame):
             75, 75, text="N/A", font=("Arial", 20, "bold"), fill="#5C4033"
         )
 
-        # Advice Section
         advice_frame = ctk.CTkFrame(score_advice_frame, fg_color="#FFFFFF", corner_radius=0)
         advice_frame.pack(side="left", fill="both", expand=True, padx=20, pady=(0, 10))
 
@@ -191,7 +181,7 @@ class PasswordChecker(ctk.CTkFrame):
 
         self.advice_dynamic_label = ctk.CTkLabel(
             advice_frame,
-            text="",  # Dynamic advice updates here
+            text="",
             font=("Arial", 14),
             text_color="#5C4033",
             justify="left"
@@ -208,21 +198,35 @@ class PasswordChecker(ctk.CTkFrame):
         results = []
         advice = []
 
-        # Entropy Check
-        entropy_score = 0  # Default entropy score
+        entropy_score = 0
+        entropy_details = ""
         if entropy_enabled:
             char_types = {
-                "uppercase": any(char.isupper() for char in password),
-                "lowercase": any(char.islower() for char in password),
-                "numbers": any(char.isdigit() for char in password),
-                "symbols": any(char in "!@#$%^&*()-_=+[]{}|;:'\",.<>?/`~" for char in password),
+                "uppercase": sum(1 for char in password if char.isupper()),
+                "lowercase": sum(1 for char in password if char.islower()),
+                "numbers": sum(1 for char in password if char.isdigit()),
+                "symbols": sum(1 for char in password if char in "!@#$%^&*()-_=+[]{}|;:'\",.<>?/`~"),
             }
-            char_variety = sum(char_types.values())
-            entropy = len(password) * char_variety
+            char_variety = sum(bool(count) for count in char_types.values())
+            total_chars = len(password)
+            entropy = total_chars * char_variety
             entropy_score = min(int((entropy / 100) * 100), 100)
+
+            entropy_details = (
+                f"Character Distribution:\n"
+                f"  - Uppercase Letters: {char_types['uppercase']}\n"
+                f"  - Lowercase Letters: {char_types['lowercase']}\n"
+                f"  - Numbers: {char_types['numbers']}\n"
+                f"  - Symbols: {char_types['symbols']}\n"
+                f"Entropy Calculation:\n"
+                f"  - Total Characters: {total_chars}\n"
+                f"  - Character Variety: {char_variety}\n"
+                f"  - Entropy (Characters x Variety): {entropy}\n"
+                f"Entropy Score: {entropy_score}%\n"
+            )
+
             results.append(f"Entropy Score: {entropy_score}%")
 
-            # Generate advice
             if len(password) < 12:
                 advice.append("Use at least 12 characters.")
             if not char_types["uppercase"]:
@@ -236,36 +240,59 @@ class PasswordChecker(ctk.CTkFrame):
             if "123" in password or password.lower() in ["password", "admin"]:
                 advice.append("Avoid common patterns like '123' or dictionary words.")
 
-        # Brute Force Check
+        brute_force_details = ""
         if brute_force_enabled:
             brute_force_result = estimate_crack_time(password, hacker_skill)
+            combinations = brute_force_result["complexity_level"]
+            guesses_per_second = HACKER_SPEEDS[hacker_skill]
+            brute_force_details = (
+                f"Brute Force Analysis:\n"
+                f"  - Complexity Level: {brute_force_result['complexity_level']}\n"
+                f"  - Total Combinations: {combinations}\n"
+                f"  - Guesses Per Second: {guesses_per_second}\n"
+                f"  - Estimated Crack Time: "
+                f"{brute_force_result['days']}d {brute_force_result['hours']}h {brute_force_result['minutes']}m {brute_force_result['seconds']}s\n"
+            )
             results.append(
                 f"Brute Force Crack Time: {brute_force_result['days']}d "
                 f"{brute_force_result['hours']}h {brute_force_result['minutes']}m"
             )
 
-        # Dictionary Attack
+        dictionary_details = ""
         if dictionary_attack_enabled:
             dictionary_result = check_dictionary(password)
+            base_pattern = remove_common_patterns(password)
+            dictionary_details = (
+                f"Dictionary Analysis:\n"
+                f"  - Result: {dictionary_result}\n"
+                f"  - Base Pattern Removed: {base_pattern}\n"
+                f"  - Applied Fuzzy Matching: Yes\n"
+            )
             results.append(f"Dictionary Attack: {dictionary_result}")
 
-        # Update HiveGrade in the Sidebar
         self.sidebar.update_hivegrade(
             entropy_score=entropy_score,
-            dictionary_score=100,  # Use dictionary_score if relevant
-            api_score=0  # Placeholder for API score
+            dictionary_score=100 if dictionary_attack_enabled else 0,
+            api_score=0
         )
 
-        # Update the HiveGrade circle
         self.update_hivegrade(entropy_score)
 
-        # Update advice label
         advice_text = "\n".join([f"{i + 1}. {line}" for i, line in enumerate(advice)])
         self.advice_dynamic_label.configure(text=advice_text)
 
-        # Display results in console
         self.console_textbox.configure(state="normal")
         self.console_textbox.delete("1.0", "end")
+
+        self.console_textbox.insert("end", "=== Technical Breakdown ===\n")
+        if entropy_enabled:
+            self.console_textbox.insert("end", entropy_details + "\n")
+        if brute_force_enabled:
+            self.console_textbox.insert("end", brute_force_details + "\n")
+        if dictionary_attack_enabled:
+            self.console_textbox.insert("end", dictionary_details + "\n")
+
+        self.console_textbox.insert("end", "=== Final Results ===\n")
         self.console_textbox.insert("end", "\n".join(results))
         self.console_textbox.configure(state="disabled")
 

@@ -4,7 +4,7 @@ from config.settings import NAVBAR_COLOR, TITLE_FONT, LOGO_PATH, TEXT_COLOR
 
 class Navbar(ctk.CTkFrame):
     def __init__(self, parent):
-        super().__init__(parent, fg_color=NAVBAR_COLOR, corner_radius=0)  # Remove rounded edges
+        super().__init__(parent, fg_color=NAVBAR_COLOR, corner_radius=0)  
         self.pack(fill="x")
 
         # Logo Image
